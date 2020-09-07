@@ -51,7 +51,11 @@ object VCSRepoAlg {
         else
           for {
             parent <- repoOut.parentOrRaise[F]
-            _ <- gitAlg.syncFork(repo, withLogin(parent.clone_url), parent.default_branch)
+            _ <- gitAlg.syncFork(
+              repo,
+              withLogin(parent.clone_url),
+              repo.branch.getOrElse(parent.default_branch)
+            )
           } yield ()
 
       val withLogin: Uri => Uri =

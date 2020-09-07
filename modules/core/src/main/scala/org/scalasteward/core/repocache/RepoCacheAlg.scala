@@ -22,7 +22,7 @@ import io.chrisdavenport.log4cats.Logger
 import org.scalasteward.core.application.Config
 import org.scalasteward.core.buildtool.BuildToolDispatcher
 import org.scalasteward.core.data.{Dependency, DependencyInfo}
-import org.scalasteward.core.git.GitAlg
+import org.scalasteward.core.git.{Branch, GitAlg}
 import org.scalasteward.core.repoconfig.RepoConfigAlg
 import org.scalasteward.core.util.MonadThrowable
 import org.scalasteward.core.util.logger.LoggerOps
@@ -48,7 +48,7 @@ final class RepoCacheAlg[F[_]](implicit
         logger.info(s"Skipping due to previous error"),
         for {
           ((repoOut, branchOut), cachedSha1) <- (
-              vcsApiAlg.createForkOrGetRepoWithDefaultBranch(config, repo),
+              vcsApiAlg.createForkOrGetRepoWithBranch(config, repo),
               repoCacheRepository.findSha1(repo)
           ).parTupled
           latestSha1 = branchOut.commit.sha
@@ -61,21 +61,23 @@ final class RepoCacheAlg[F[_]](implicit
   private def cloneAndRefreshCache(repo: Repo, repoOut: RepoOut): F[Unit] =
     for {
       _ <- logger.info(s"Refresh cache of ${repo.show}")
+      defaultBranch <- vcsRepoAlg.defaultBranch(repoOut)
       _ <- vcsRepoAlg.clone(repo, repoOut)
       _ <- vcsRepoAlg.syncFork(repo, repoOut)
-      _ <- refreshCache(repo)
+      _ <- refreshCache(repo, defaultBranch)
     } yield ()
 
-  private def refreshCache(repo: Repo): F[Unit] =
-    computeCache(repo).attempt.flatMap {
+  private def refreshCache(repo: Repo, defaultBranch: Branch): F[Unit] =
+    computeCache(repo, defaultBranch).attempt.flatMap {
       case Right(cache) =>
         repoCacheRepository.updateCache(repo, cache)
       case Left(throwable) =>
         refreshErrorAlg.persistError(repo, throwable) >> F.raiseError(throwable)
     }
 
-  private def computeCache(repo: Repo): F[RepoCache] =
+  private def computeCache(repo: Repo, defaultBranch: Branch): F[RepoCache] =
     for {
+      _ <- gitAlg.checkoutBranch(repo, repo.branch.getOrElse(defaultBranch))
       branch <- gitAlg.currentBranch(repo)
       latestSha1 <- gitAlg.latestSha1(repo, branch)
       dependencies <- buildToolDispatcher.getDependencies(repo)

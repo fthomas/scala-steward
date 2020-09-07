@@ -31,7 +31,7 @@ import org.scalasteward.core.repoconfig.{PullRequestUpdateStrategy, RepoConfigAl
 import org.scalasteward.core.scalafix.MigrationAlg
 import org.scalasteward.core.util.logger.LoggerOps
 import org.scalasteward.core.util.{DateTimeAlg, HttpExistenceClient}
-import org.scalasteward.core.vcs.data.{NewPullRequestData, Repo}
+import org.scalasteward.core.vcs.data.{NewPullRequestData, Repo, RepoOut}
 import org.scalasteward.core.vcs.{VCSApiAlg, VCSExtraAlg, VCSRepoAlg}
 import org.scalasteward.core.{git, util, vcs}
 
@@ -67,12 +67,16 @@ final class NurtureAlg[F[_]](implicit
     for {
       _ <- logger.info(s"Clone and synchronize ${repo.show}")
       repoOut <- vcsApiAlg.createForkOrGetRepo(config, repo)
+      branch <- repo.branch.map(F.pure).getOrElse(vcsRepoAlg.defaultBranch(repoOut))
       _ <-
         gitAlg
           .cloneExists(repo)
-          .ifM(F.unit, vcsRepoAlg.clone(repo, repoOut) >> vcsRepoAlg.syncFork(repo, repoOut))
-      defaultBranch <- vcsRepoAlg.defaultBranch(repoOut)
-    } yield (repoOut.repo, defaultBranch)
+          .ifM(
+            F.unit,
+            vcsRepoAlg.clone(repo, repoOut) >> vcsRepoAlg.syncFork(repo, repoOut) >> gitAlg
+              .checkoutBranch(repo, branch)
+          )
+    } yield (repoOut.repo, branch)
 
   def updateDependencies(
       repo: Repo,
@@ -85,12 +89,23 @@ final class NurtureAlg[F[_]](implicit
       grouped = Update.groupByGroupId(updates)
       sorted = grouped.sortBy(migrationAlg.findMigrations(_).size)
       _ <- logger.info(util.logger.showUpdates(sorted))
+      _ <- gitAlg.checkoutBranch(repo, baseBranch)
       baseSha1 <- gitAlg.latestSha1(repo, baseBranch)
+      repoOut <- vcsApiAlg.getRepo(repo)
+      nonDefaultBranch <- nonDefaultBranchOrNone(repoOut, baseBranch)
       _ <- NurtureAlg.processUpdates(
         sorted,
         update =>
           processUpdate(
-            UpdateData(repo, fork, repoConfig, update, baseBranch, baseSha1, git.branchFor(update))
+            UpdateData(
+              repo,
+              fork,
+              repoConfig,
+              update,
+              baseBranch,
+              baseSha1,
+              git.branchFor(update, nonDefaultBranch)
+            )
           ),
         repoConfig.updates.limit
       )
@@ -99,7 +114,9 @@ final class NurtureAlg[F[_]](implicit
   def processUpdate(data: UpdateData): F[ProcessResult] =
     for {
       _ <- logger.info(s"Process update ${data.update.show}")
-      head = vcs.listingBranch(config.vcsType, data.fork, data.update)
+      repoOut <- vcsApiAlg.getRepo(data.repo)
+      nonDefaultBranch <- nonDefaultBranchOrNone(repoOut, data.baseBranch)
+      head = vcs.listingBranch(config.vcsType, data.fork, data.update, nonDefaultBranch)
       pullRequests <- vcsApiAlg.listPullRequests(data.repo, head, data.baseBranch)
       result <- pullRequests.headOption match {
         case Some(pr) if pr.isClosed =>
@@ -139,7 +156,14 @@ final class NurtureAlg[F[_]](implicit
     )
 
   def commitChanges(data: UpdateData): F[Option[Commit]] =
-    gitAlg.commitAllIfDirty(data.repo, git.commitMsgFor(data.update, data.repoConfig.commits))
+    for {
+      repoOut <- vcsApiAlg.getRepo(data.repo)
+      nonDefaultBranch <- nonDefaultBranchOrNone(repoOut, data.baseBranch)
+      commit <- gitAlg.commitAllIfDirty(
+        data.repo,
+        git.commitMsgFor(data.update, data.repoConfig.commits, nonDefaultBranch)
+      )
+    } yield commit
 
   def pushCommits(data: UpdateData, commits: List[Commit]): F[ProcessResult] =
     if (commits.isEmpty) F.pure[ProcessResult](Ignored)
@@ -148,6 +172,11 @@ final class NurtureAlg[F[_]](implicit
         _ <- logger.info(s"Push ${commits.length} commit(s)")
         _ <- gitAlg.push(data.repo, data.updateBranch)
       } yield Updated
+
+  private def nonDefaultBranchOrNone(repoOut: RepoOut, baseBranch: Branch): F[Option[Branch]] =
+    vcsRepoAlg
+      .defaultBranch(repoOut)
+      .map(branch => if (branch.name === baseBranch.name) None else Some(branch))
 
   def createPullRequest(data: UpdateData): F[Unit] =
     for {
@@ -163,14 +192,17 @@ final class NurtureAlg[F[_]](implicit
         existingArtifactUrlsMap
           .get(data.update.mainArtifactId)
           .traverse(vcsExtraAlg.getReleaseRelatedUrls(_, data.update))
-      branchName = vcs.createBranch(config.vcsType, data.fork, data.update)
+      repoOut <- vcsApiAlg.getRepo(data.repo)
+      nonDefaultBaseBranch <- nonDefaultBranchOrNone(repoOut, data.baseBranch)
+      branchName = vcs.createBranch(config.vcsType, data.fork, data.update, nonDefaultBaseBranch)
       migrations = migrationAlg.findMigrations(data.update)
       requestData = NewPullRequestData.from(
         data,
         branchName,
         existingArtifactUrlsMap,
         releaseRelatedUrls.getOrElse(List.empty),
-        migrations
+        migrations,
+        nonDefaultBaseBranch
       )
       pr <- vcsApiAlg.createPullRequest(data.repo, requestData)
       _ <- pullRequestRepository.createOrUpdate(

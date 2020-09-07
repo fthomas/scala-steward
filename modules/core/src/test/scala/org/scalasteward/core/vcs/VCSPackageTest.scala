@@ -4,6 +4,7 @@ import org.http4s.syntax.literals._
 import org.scalasteward.core.TestSyntax._
 import org.scalasteward.core.application.SupportedVCS.{GitHub, Gitlab}
 import org.scalasteward.core.data.Update
+import org.scalasteward.core.git.Branch
 import org.scalasteward.core.util.Nel
 import org.scalasteward.core.vcs.data.Repo
 import org.scalatest.funsuite.AnyFunSuite
@@ -15,13 +16,55 @@ class VCSPackageTest extends AnyFunSuite with Matchers {
     Update.Single("ch.qos.logback" % "logback-classic" % "1.2.0", Nel.of("1.2.3"))
 
   test("listingBranch") {
-    listingBranch(GitHub, repo, update) shouldBe "foo/bar:update/logback-classic-1.2.3"
-    listingBranch(Gitlab, repo, update) shouldBe "update/logback-classic-1.2.3"
+    listingBranch(
+      GitHub,
+      repo,
+      update,
+      Some(Branch("non-default"))
+    ) shouldBe "foo/bar:update/non-default/logback-classic-1.2.3"
+    listingBranch(
+      Gitlab,
+      repo,
+      update,
+      Some(Branch("non-default"))
+    ) shouldBe "update/non-default/logback-classic-1.2.3"
+
+    listingBranch(
+      GitHub,
+      repo,
+      update
+    ) shouldBe "foo/bar:update/logback-classic-1.2.3"
+    listingBranch(
+      Gitlab,
+      repo,
+      update
+    ) shouldBe "update/logback-classic-1.2.3"
   }
 
   test("createBranch") {
-    createBranch(GitHub, repo, update) shouldBe "foo:update/logback-classic-1.2.3"
-    createBranch(Gitlab, repo, update) shouldBe "update/logback-classic-1.2.3"
+    createBranch(
+      GitHub,
+      repo,
+      update,
+      Some(Branch("non-default"))
+    ) shouldBe "foo:update/non-default/logback-classic-1.2.3"
+    createBranch(
+      Gitlab,
+      repo,
+      update,
+      Some(Branch("non-default"))
+    ) shouldBe "update/non-default/logback-classic-1.2.3"
+
+    createBranch(
+      GitHub,
+      repo,
+      update
+    ) shouldBe "foo:update/logback-classic-1.2.3"
+    createBranch(
+      Gitlab,
+      repo,
+      update
+    ) shouldBe "update/logback-classic-1.2.3"
   }
 
   test("possibleCompareUrls") {

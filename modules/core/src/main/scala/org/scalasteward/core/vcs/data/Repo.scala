@@ -17,23 +17,30 @@
 package org.scalasteward.core.vcs.data
 
 import io.circe.{KeyDecoder, KeyEncoder}
+import org.scalasteward.core.git.Branch
 
 final case class Repo(
     owner: String,
-    repo: String
+    repo: String,
+    branch: Option[Branch] = None
 ) {
-  def show: String = s"$owner/$repo"
+  def show: String = branch.map(branch => s"$owner/$repo/${branch.name}").getOrElse(s"$owner/$repo")
 }
 
 object Repo {
   implicit val repoKeyDecoder: KeyDecoder[Repo] = {
-    val / = s"(.+)/([^/]+)".r
+    val regex = s"(.+)/([^#/\n]+)(?:#(.+))?".r
     KeyDecoder.instance {
-      case owner / repo => Some(Repo(owner, repo))
-      case _            => None
+      case regex(owner, repo, null)   => Some(Repo(owner, repo, None))
+      case regex(owner, repo, branch) => Some(Repo(owner, repo, Some(Branch(branch))))
+      case _                          => None
     }
   }
 
   implicit val repoKeyEncoder: KeyEncoder[Repo] =
-    KeyEncoder.instance(repo => repo.owner + "/" + repo.repo)
+    KeyEncoder.instance(repo =>
+      repo.branch
+        .map(branch => s"${repo.owner}/${repo.repo}/${branch.name}")
+        .getOrElse(s"${repo.owner}/${repo.repo}")
+    )
 }

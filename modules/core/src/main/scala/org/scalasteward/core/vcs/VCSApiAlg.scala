@@ -38,29 +38,29 @@ trait VCSApiAlg[F[_]] {
     if (config.doNotFork) getRepo(repo)
     else createFork(repo)
 
-  final def createForkOrGetRepoWithDefaultBranch(config: Config, repo: Repo)(implicit
+  final def createForkOrGetRepoWithBranch(config: Config, repo: Repo)(implicit
       F: MonadThrowable[F]
   ): F[(RepoOut, BranchOut)] =
-    if (config.doNotFork) getRepoWithDefaultBranch(repo)
-    else createForkWithDefaultBranch(repo)
+    if (config.doNotFork) getRepoWithBranch(repo)
+    else createForkWithBranch(repo)
 
-  final def createForkWithDefaultBranch(repo: Repo)(implicit
+  final def createForkWithBranch(repo: Repo)(implicit
       F: MonadThrowable[F]
   ): F[(RepoOut, BranchOut)] =
     for {
       fork <- createFork(repo)
       parent <- fork.parentOrRaise[F]
-      branchOut <- getDefaultBranch(parent)
+      branchOut <- getSelectedBranchOrDefault(parent, repo)
     } yield (fork, branchOut)
 
-  final def getRepoWithDefaultBranch(repo: Repo)(implicit
+  final def getRepoWithBranch(repo: Repo)(implicit
       F: Monad[F]
   ): F[(RepoOut, BranchOut)] =
     for {
       repoOut <- getRepo(repo)
-      branchOut <- getDefaultBranch(repoOut)
+      branchOut <- getSelectedBranchOrDefault(repoOut, repo)
     } yield (repoOut, branchOut)
 
-  final def getDefaultBranch(repoOut: RepoOut): F[BranchOut] =
-    getBranch(repoOut.repo, repoOut.default_branch)
+  final def getSelectedBranchOrDefault(repoOut: RepoOut, repo: Repo): F[BranchOut] =
+    getBranch(repoOut.repo, repo.branch.getOrElse(repoOut.default_branch))
 }

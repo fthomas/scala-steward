@@ -36,8 +36,9 @@ private[http4s] object RepositoryResponse {
   implicit private val repoDecoder: Decoder[Repo] = Decoder.instance { c =>
     c.as[String].map(_.split('/')).flatMap { parts =>
       parts match {
-        case Array(owner, name) => Repo(owner, name).asRight
-        case _                  => DecodingFailure("Repo", c.history).asLeft
+        case Array(owner, name)         => Repo(owner, name, None).asRight
+        case Array(owner, name, branch) => Repo(owner, name, Some(Branch(branch))).asRight
+        case _                          => DecodingFailure("Repo", c.history).asLeft
       }
     }
   }

@@ -65,7 +65,7 @@ class Http4sBitbucketApiAlg[F[_]: Sync](
     val payload = CreatePullRequestRequest(
       data.title,
       Branch(data.head),
-      Repo(sourceBranchOwner, repo.repo),
+      Repo(sourceBranchOwner, repo.repo, repo.branch),
       data.base,
       data.body
     )

@@ -21,17 +21,27 @@ import org.scalasteward.core.repoconfig.CommitsConfig
 import org.scalasteward.core.update.show
 
 package object git {
-  def branchFor(update: Update): Branch =
-    Branch(s"update/${update.name}-${update.nextVersion}")
+  def branchFor(update: Update, baseBranch: Option[Branch]): Branch =
+    baseBranch
+      .map(branch => Branch(s"update/${branch.name}/${update.name}-${update.nextVersion}"))
+      .getOrElse(Branch(s"update/${update.name}-${update.nextVersion}"))
 
-  def commitMsgFor(update: Update, commitsConfig: CommitsConfig): String = {
+  def commitMsgFor(
+      update: Update,
+      commitsConfig: CommitsConfig,
+      nonDefaultBaseBranch: Option[Branch] = None
+  ): String = {
     val artifact = show.oneLiner(update)
-    val defaultMessage = s"Update $artifact to ${update.nextVersion}"
+    val defaultMessage = nonDefaultBaseBranch
+      .map(branch => s"Update $artifact to ${update.nextVersion} (${branch.name})")
+      .getOrElse(s"Update $artifact to ${update.nextVersion}")
+
     commitsConfig.messageOrDefault
       .replace("${default}", defaultMessage)
       .replace("${artifactName}", artifact)
       .replace("${currentVersion}", update.currentVersion)
       .replace("${nextVersion}", update.nextVersion)
+      .replace("${branchName}", nonDefaultBaseBranch.map(_.name).getOrElse(""))
   }
 
   // man 7 gitrevisions:

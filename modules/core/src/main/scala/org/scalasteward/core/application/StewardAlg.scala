@@ -23,7 +23,7 @@ import cats.syntax.all._
 import fs2.Stream
 import io.chrisdavenport.log4cats.Logger
 import org.scalasteward.core.buildtool.sbt.SbtAlg
-import org.scalasteward.core.git.GitAlg
+import org.scalasteward.core.git.{Branch, GitAlg}
 import org.scalasteward.core.io.{FileAlg, WorkspaceAlg}
 import org.scalasteward.core.nurture.NurtureAlg
 import org.scalasteward.core.repocache.RepoCacheAlg
@@ -62,10 +62,11 @@ final class StewardAlg[F[_]](implicit
 
   private def readRepos(reposFile: File): F[List[Repo]] =
     fileAlg.readFile(reposFile).map { maybeContent =>
-      val regex = """-\s+(.+)/([^/]+)""".r
+      val regex = """-\s+(.+)/([^#\n]+)(?:#(.+))?""".r
       val content = maybeContent.getOrElse("")
       content.linesIterator.collect {
-        case regex(owner, repo) => Repo(owner.trim, repo.trim)
+        case regex(owner, repo, null)   => Repo(owner.trim, repo.trim, branch = None)
+        case regex(owner, repo, branch) => Repo(owner.trim, repo.trim, Some(Branch(branch)))
       }.toList
     }
 

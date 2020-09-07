@@ -166,10 +166,11 @@ object NewPullRequestData {
       branchName: String,
       artifactIdToUrl: Map[String, Uri] = Map.empty,
       releaseRelatedUrls: List[ReleaseRelatedUrl] = List.empty,
-      migrations: List[Migration] = List.empty
+      migrations: List[Migration] = List.empty,
+      nonDefaultBaseBranch: Option[Branch] = None
   ): NewPullRequestData =
     NewPullRequestData(
-      title = git.commitMsgFor(data.update, data.repoConfig.commits),
+      title = git.commitMsgFor(data.update, data.repoConfig.commits, nonDefaultBaseBranch),
       body = bodyFor(
         data.update,
         artifactIdToUrl,
