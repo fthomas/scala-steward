@@ -89,7 +89,7 @@ object Context {
       implicit val refreshErrorAlg: RefreshErrorAlg[F] =
         new RefreshErrorAlg[F](new JsonKeyValueStore("refresh_error", "1", kvsPrefix))
       implicit val repoCacheAlg: RepoCacheAlg[F] = new RepoCacheAlg[F]
-      implicit val editAlg: EditAlg[F] = new EditAlg[F]
+      implicit val editAlg: EditAlg[F] = new EditAlg[F]()
       implicit val nurtureAlg: NurtureAlg[F] = new NurtureAlg[F]
       implicit val pruningAlg: PruningAlg[F] = new PruningAlg[F]
       new StewardAlg[F]

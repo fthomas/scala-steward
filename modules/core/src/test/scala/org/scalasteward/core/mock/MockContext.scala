@@ -86,8 +86,8 @@ object MockContext {
   implicit val sbtAlg: SbtAlg[MockEff] = SbtAlg.create
   implicit val millAlg: MillAlg[MockEff] = MillAlg.create
   implicit val buildToolDispatcher: BuildToolDispatcher[MockEff] = BuildToolDispatcher.create
-  implicit val editAlg: EditAlg[MockEff] = new EditAlg[MockEff]
   implicit val repoConfigAlg: RepoConfigAlg[MockEff] = new RepoConfigAlg[MockEff]
+  implicit val editAlg: EditAlg[MockEff] = new EditAlg[MockEff]
   implicit val pullRequestRepository: PullRequestRepository[MockEff] =
     new PullRequestRepository[MockEff](new JsonKeyValueStore("pull_requests", "1"))
   implicit val pruningAlg: PruningAlg[MockEff] = new PruningAlg[MockEff]

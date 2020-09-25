@@ -24,7 +24,7 @@ final case class RepoConfig(
     commits: CommitsConfig = CommitsConfig(),
     pullRequests: PullRequestsConfig = PullRequestsConfig(),
     updates: UpdatesConfig = UpdatesConfig(),
-    updatePullRequests: Option[PullRequestUpdateStrategy] = None
+    updatePullRequests: Option[PullRequestUpdateStrategy] = None,
 ) {
   def updatePullRequestsOrDefault: PullRequestUpdateStrategy =
     updatePullRequests.getOrElse(PullRequestUpdateStrategy.default)

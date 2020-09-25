@@ -205,6 +205,29 @@ object UpdateHeuristic {
     }
   )
 
-  val all: Nel[UpdateHeuristic] =
-    Nel.of(moduleId, strict, original, relaxed, sliding, completeGroupId, groupId, specific)
+  def custom(customHeuristics: List[CustomHeuristic]): UpdateHeuristic = UpdateHeuristic(
+    name = "custom",
+    replaceVersion = defaultReplaceVersion {
+      case s: Update.Single =>
+        customHeuristics
+          .filter(_.groupId === s.groupId)
+          .filter(_.artifactName.forall(_ === s.artifactId.name))
+          .flatMap(_.termsToReplace.toList)
+
+      case Update.Group(crossDependencies, _) =>
+        customHeuristics
+          .filter { h =>
+            crossDependencies
+              .forall(_.dependencies.forall(d => h.groupId === d.groupId && h.artifactName.forall(_ === d.artifactId.name)))
+          }
+          .flatMap(_.termsToReplace.toList)
+    }
+  )
+
+  def all(customHeuristics: List[CustomHeuristic] = Nil): Nel[UpdateHeuristic] =
+    Nel.of(moduleId, strict, original, relaxed, sliding, completeGroupId, groupId, specific, custom(customHeuristics))
 }
+
+
+
+

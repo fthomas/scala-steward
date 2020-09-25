@@ -38,7 +38,7 @@ class UpdateHeuristicTest extends AnyFunSuite with Matchers {
         |addSbtPlugin("org.portable-scala" % "sbt-scalajs-crossproject" % "0.4.0")
       """.stripMargin.trim
     Single("org.scala-js" % "sbt-scalajs" % "0.6.24", Nel.of("0.6.25"))
-      .replaceVersionIn(original) shouldBe (None -> UpdateHeuristic.all.last.name)
+      .replaceVersionIn(original) shouldBe (None -> UpdateHeuristic.all().last.name)
   }
 
   test("all on one line") {
@@ -283,7 +283,7 @@ class UpdateHeuristicTest extends AnyFunSuite with Matchers {
   test("artifactId with common suffix") {
     val original = """case _ => "1.0.2" """
     Single("co.fs2" % "fs2-core" % "1.0.2", Nel.of("1.0.4"))
-      .replaceVersionIn(original) shouldBe (None -> UpdateHeuristic.all.last.name)
+      .replaceVersionIn(original) shouldBe (None -> UpdateHeuristic.all().last.name)
   }
 
   test("word from groupId") {
@@ -308,25 +308,25 @@ class UpdateHeuristicTest extends AnyFunSuite with Matchers {
 
     val original = """version=2.0.0"""
     Single("org.scalameta" % "other-artifact" % "2.0.0", Nel.of("2.0.1"))
-      .replaceVersionIn(original) shouldBe (None -> UpdateHeuristic.all.last.name)
+      .replaceVersionIn(original) shouldBe (None -> UpdateHeuristic.all().last.name)
   }
 
   test("ignore TLD") {
     val original = """ "com.propensive" %% "contextual" % "1.0.1" """
     Single("com.slamdata" % "fs2-gzip" % "1.0.1", Nel.of("1.1.1"))
-      .replaceVersionIn(original) shouldBe (None -> UpdateHeuristic.all.last.name)
+      .replaceVersionIn(original) shouldBe (None -> UpdateHeuristic.all().last.name)
   }
 
   test("ignore short words") {
     val original = "SBT_VERSION=1.2.7"
     Single("org.scala-sbt" % "scripted-plugin" % "1.2.7", Nel.of("1.2.8"))
-      .replaceVersionIn(original) shouldBe (None -> UpdateHeuristic.all.last.name)
+      .replaceVersionIn(original) shouldBe (None -> UpdateHeuristic.all().last.name)
   }
 
   test("ignore 'scala' substring") {
     val original = """ val scalaTestVersion = "3.0.7" """
     Single("org.scalactic" % "scalactic" % "3.0.7", Nel.of("3.0.8"))
-      .replaceVersionIn(original) shouldBe (None -> UpdateHeuristic.all.last.name)
+      .replaceVersionIn(original) shouldBe (None -> UpdateHeuristic.all().last.name)
   }
 
   test("version that contains the current version as proper substring") {
@@ -382,7 +382,7 @@ class UpdateHeuristicTest extends AnyFunSuite with Matchers {
         |  "com.typesafe.akka" %% "akka-testkit" % "2.4.0",
         |  """.stripMargin.trim
     Group("com.typesafe.akka" % Nel.of("akka-actor", "akka-testkit") % "2.4.0", Nel.of("2.5.0"))
-      .replaceVersionIn(original) shouldBe (None -> UpdateHeuristic.all.last.name)
+      .replaceVersionIn(original) shouldBe (None -> UpdateHeuristic.all().last.name)
   }
 
   test("update multiple lines between `on` and `off`") {
@@ -491,7 +491,7 @@ class UpdateHeuristicTest extends AnyFunSuite with Matchers {
 object UpdateHeuristicTest {
   implicit class UpdateOps(update: Update) {
     def replaceVersionIn(target: String): (Option[String], String) =
-      UpdateHeuristic.all.foldLeft((Option.empty[String], "")) {
+      UpdateHeuristic.all().foldLeft((Option.empty[String], "")) {
         case ((None, _), heuristic) => (heuristic.replaceVersion(update)(target), heuristic.name)
         case (result, _)            => result
       }

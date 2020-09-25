@@ -24,6 +24,7 @@ import io.chrisdavenport.log4cats.Logger
 import org.scalasteward.core.buildtool.BuildToolDispatcher
 import org.scalasteward.core.data.Update
 import org.scalasteward.core.io.{isSourceFile, FileAlg, WorkspaceAlg}
+import org.scalasteward.core.repoconfig.RepoConfigAlg
 import org.scalasteward.core.scalafix.MigrationAlg
 import org.scalasteward.core.util._
 import org.scalasteward.core.vcs.data.Repo
@@ -35,6 +36,7 @@ final class EditAlg[F[_]](implicit
     migrationAlg: MigrationAlg,
     streamCompiler: Stream.Compiler[F, F],
     workspaceAlg: WorkspaceAlg[F],
+    repoConfigAlg: RepoConfigAlg[F],
     F: MonadThrowable[F]
 ) {
   def applyUpdate(repo: Repo, update: Update, fileExtensions: Set[String]): F[Unit] =
@@ -49,13 +51,19 @@ final class EditAlg[F[_]](implicit
         isSourceFile(update, fileExtensions)
       )
       noFilesFound = logger.warn("No files found that contain the current version")
-      _ <- files.toNel.fold(noFilesFound)(applyUpdateTo(_, update))
+      config <- repoConfigAlg.readRepoConfigOrDefault(repo)
+      _ <- files.toNel.fold(noFilesFound)(applyUpdateTo(_, update, config.updates.customHeuristics))
     } yield ()
 
-  def applyUpdateTo[G[_]: Traverse](files: G[File], update: Update): F[Unit] = {
-    val actions = UpdateHeuristic.all.map { heuristic =>
-      logger.info(s"Trying heuristic '${heuristic.name}'") >>
-        fileAlg.editFiles(files, heuristic.replaceVersion(update))
+  def applyUpdateTo[G[_]: Traverse](
+      files: G[File],
+      update: Update,
+      customHeuristics: List[CustomHeuristic] = Nil
+  ): F[Unit] = {
+    val actions: Nel[F[Boolean]] = UpdateHeuristic.all(customHeuristics = customHeuristics).map {
+      heuristic =>
+        logger.info(s"Trying heuristic '${heuristic.name}'") >>
+          fileAlg.editFiles(files, heuristic.replaceVersion(update))
     }
     bindUntilTrue(actions).void
   }

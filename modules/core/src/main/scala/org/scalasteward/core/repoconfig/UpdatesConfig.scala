@@ -22,6 +22,7 @@ import io.circe.generic.extras.semiauto._
 import io.circe.refined._
 import io.circe.{Decoder, Encoder}
 import org.scalasteward.core.data.Update
+import org.scalasteward.core.edit.CustomHeuristic
 import org.scalasteward.core.update.FilterAlg.{
   FilterResult,
   IgnoredByConfig,
@@ -36,7 +37,8 @@ final case class UpdatesConfig(
     ignore: List[UpdatePattern] = List.empty,
     limit: Option[PosInt] = None,
     includeScala: Option[Boolean] = None,
-    fileExtensions: List[String] = List.empty
+    fileExtensions: List[String] = List.empty,
+    customHeuristics: List[CustomHeuristic] = List.empty
 ) {
   def keep(update: Update.Single): FilterResult =
     isAllowed(update).flatMap(isPinned).flatMap(isIgnored)
