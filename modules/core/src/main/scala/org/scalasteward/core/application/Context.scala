@@ -31,10 +31,11 @@ import org.scalasteward.core.coursier.{CoursierAlg, VersionsCache}
 import org.scalasteward.core.edit.EditAlg
 import org.scalasteward.core.git.GitAlg
 import org.scalasteward.core.io.{FileAlg, ProcessAlg, WorkspaceAlg}
-import org.scalasteward.core.nurture.{NurtureAlg, PullRequestRepository}
+import org.scalasteward.core.nurture.{NurtureAlg, PullRequestRepository, UrlMappingAlg}
 import org.scalasteward.core.persistence.JsonKeyValueStore
 import org.scalasteward.core.repocache.{RefreshErrorAlg, RepoCacheAlg, RepoCacheRepository}
 import org.scalasteward.core.repoconfig.RepoConfigAlg
+import org.scalasteward.core.scaladex.{HttpScaladexClient, ScaladexAlg}
 import org.scalasteward.core.scalafix.{MigrationAlg, MigrationsLoader}
 import org.scalasteward.core.scalafmt.ScalafmtAlg
 import org.scalasteward.core.update.{ArtifactMigrations, FilterAlg, PruningAlg, UpdateAlg}
@@ -70,6 +71,7 @@ object Context {
       implicit val filterAlg: FilterAlg[F] = new FilterAlg[F]
       implicit val gitAlg: GitAlg[F] = GitAlg.create[F]
       implicit val httpJsonClient: HttpJsonClient[F] = new HttpJsonClient[F]
+      implicit val httpScaladexClient: HttpScaladexClient[F] = new HttpScaladexClient[F]
       implicit val repoCacheRepository: RepoCacheRepository[F] =
         new RepoCacheRepository[F](new JsonKeyValueStore("repo_cache", "1", kvsPrefix))
       val vcsSelection = new VCSSelection[F]
@@ -81,6 +83,7 @@ object Context {
       implicit val scalafmtAlg: ScalafmtAlg[F] = ScalafmtAlg.create[F]
       implicit val selfCheckAlg: SelfCheckAlg[F] = new SelfCheckAlg[F]
       implicit val coursierAlg: CoursierAlg[F] = CoursierAlg.create[F]
+      implicit val scaladexAlg: ScaladexAlg[F] = ScaladexAlg.create[F]
       implicit val versionsCache: VersionsCache[F] =
         new VersionsCache[F](config.cacheTtl, new JsonKeyValueStore("versions", "2"))
       implicit val updateAlg: UpdateAlg[F] = new UpdateAlg[F]
@@ -92,6 +95,7 @@ object Context {
         new RefreshErrorAlg[F](new JsonKeyValueStore("refresh_error", "1", kvsPrefix))
       implicit val repoCacheAlg: RepoCacheAlg[F] = new RepoCacheAlg[F]
       implicit val editAlg: EditAlg[F] = new EditAlg[F]
+      implicit val urlMappingAlg: UrlMappingAlg[F] = UrlMappingAlg.create[F]
       implicit val nurtureAlg: NurtureAlg[F] = new NurtureAlg[F]
       implicit val pruningAlg: PruningAlg[F] = new PruningAlg[F]
       new StewardAlg[F]

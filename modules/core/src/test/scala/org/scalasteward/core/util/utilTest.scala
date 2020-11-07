@@ -36,4 +36,14 @@ class utilTest extends AnyFunSuite with Matchers with ScalaCheckPropertyChecks {
     intersects(List(1, 3, 5), Vector(2, 4, 6)) shouldBe false
     intersects(List(1, 3, 5), Vector(2, 3, 6)) shouldBe true
   }
+
+  test("combineMapLastWin") {
+    val a = Map("foo" -> "https://github.com/foo/foo", "bar" -> "https://bar.example.com")
+    val b = Map("bar" -> "https://github.com/bar/bar", "buz" -> "https://bitbucket.org/buz/buz")
+    combineMapLastWin(a, b) shouldBe Map(
+      "foo" -> "https://github.com/foo/foo",
+      "bar" -> "https://github.com/bar/bar", // last win
+      "buz" -> "https://bitbucket.org/buz/buz"
+    )
+  }
 }

@@ -161,4 +161,9 @@ package object vcs {
     val extensions = List("md", "markdown", "rst")
     (baseNames, extensions).mapN { case (base, ext) => s"$base.$ext" }
   }
+
+  def isVcsUrl(url: String): Boolean =
+    url.startsWith("https://github.com/") || url.startsWith("https://gitlab.com/") || url
+      .startsWith("https://bitbucket.org/")
+
 }

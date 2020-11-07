@@ -92,4 +92,8 @@ package object util {
       .takeThrough { case (_, total) => total < limit }
       .map { case (a, _) => a }
   }
+
+  def combineMapLastWin[K, V](first: Map[K, V], last: Map[K, V]): Map[K, V] =
+    (first.view.filterKeys(key => !last.contains(key)) ++ last).toMap
+
 }
