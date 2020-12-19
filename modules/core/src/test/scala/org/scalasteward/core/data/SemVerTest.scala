@@ -72,6 +72,14 @@ class SemVerTest extends AnyFunSuite with Matchers {
       SemVer(2, 3, 4, Some("M1"), None)
     ) shouldBe None
     SemVer.getChange(SemVer(0, 20, 0, Some("M4"), None), SemVer(0, 20, 3, None, None)) shouldBe
-      Some(Change.PreRelease)
+      Some(Change.Minor)
+    SemVer.getChange(SemVer(0, 1, 0, None, None), SemVer(0, 2, 0, None, None)) shouldBe
+      Some(Change.Major)
+    SemVer.getChange(SemVer(0, 0, 1, None, None), SemVer(0, 0, 2, None, None)) shouldBe
+      Some(Change.Major)
+    SemVer.getChange(SemVer(0, 0, 0, None, None), SemVer(0, 0, 1, None, None)) shouldBe
+      Some(Change.Major)
+    SemVer.getChange(SemVer(0, 0, 0, None, None), SemVer(0, 0, 0, None, None)) shouldBe
+      None
   }
 }
