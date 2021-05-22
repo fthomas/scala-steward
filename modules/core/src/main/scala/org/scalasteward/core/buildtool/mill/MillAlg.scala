@@ -16,10 +16,11 @@
 
 package org.scalasteward.core.buildtool.mill
 
+import better.files.File
 import cats.effect.MonadCancelThrow
 import cats.syntax.all._
 import org.scalasteward.core.buildtool.BuildToolAlg
-import org.scalasteward.core.data.Scope
+import org.scalasteward.core.data.{ArtifactId, Dependency, GroupId, Resolver, Scope}
 import org.scalasteward.core.data.Scope.Dependencies
 import org.scalasteward.core.edit.scalafix.ScalafixMigration
 import org.scalasteward.core.io.{FileAlg, ProcessAlg, WorkspaceAlg}
@@ -64,9 +65,26 @@ object MillAlg {
           parsed <- F.fromEither(
             parser.parseModules(extracted.dropWhile(!_.startsWith("{")).mkString("\n"))
           )
-        } yield parsed.map(module => Scope(module.dependencies, module.repositories))
+          dependencies = parsed.map(module => Scope(module.dependencies, module.repositories))
+          millBuildVersion <- getMillVersion(buildRootDir)
+          millBuildDeps = millBuildVersion.toSeq.map(version =>
+            Scope(List(millMainArtifact(version)), List(millMainResolver))
+          )
+        } yield dependencies ++ millBuildDeps
 
       override def runMigration(buildRoot: BuildRoot, migration: ScalafixMigration): F[Unit] =
         F.unit
+
+      def getMillVersion(buildRootDir: File): F[Option[String]] =
+        for {
+          millVersionFileContent <- fileAlg.readFile(buildRootDir / ".mill-version")
+          version = millVersionFileContent.flatMap(parser.parseMillVersion)
+        } yield version
+
     }
+
+  private[this] val millMainResolver: Resolver = Resolver.mavenCentral
+
+  private def millMainArtifact(version: String): Dependency =
+    Dependency(GroupId("com.lihaoyi"), ArtifactId("mill-main"), version)
 }
