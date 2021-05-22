@@ -20,7 +20,7 @@ import better.files.File
 import cats.effect.MonadCancelThrow
 import cats.syntax.all._
 import org.scalasteward.core.buildtool.BuildToolAlg
-import org.scalasteward.core.data.{ArtifactId, Dependency, GroupId, Resolver, Scope}
+import org.scalasteward.core.data.{ArtifactId, Dependency, GroupId, Resolver, Scope, Update}
 import org.scalasteward.core.data.Scope.Dependencies
 import org.scalasteward.core.edit.scalafix.ScalafixMigration
 import org.scalasteward.core.io.{FileAlg, ProcessAlg, WorkspaceAlg}
@@ -84,7 +84,13 @@ object MillAlg {
     }
 
   private[this] val millMainResolver: Resolver = Resolver.mavenCentral
+  private[this] val millMainGroupId = GroupId("com.lihaoyi")
+  private[this] val millMainArtifactId = ArtifactId("mill-main")
 
   private def millMainArtifact(version: String): Dependency =
-    Dependency(GroupId("com.lihaoyi"), ArtifactId("mill-main"), version)
+    Dependency(millMainGroupId, millMainArtifactId, version)
+
+  def isMillMainUpdate(update: Update.Single): Boolean =
+    update.groupId === millMainGroupId && update.artifactId.name === millMainArtifactId.name
+
 }
