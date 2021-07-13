@@ -17,9 +17,9 @@
 package org.scalasteward.core.data
 
 import cats.syntax.all._
-import org.scalasteward.core.data.SemVer.Change._
+import org.scalasteward.core.data.SemVerSpec.Change._
 
-final case class SemVer(
+final case class SemVerSpec(
     major: String,
     minor: String,
     patch: String,
@@ -27,10 +27,10 @@ final case class SemVer(
     buildMetadata: Option[String] = None
 )
 
-object SemVer {
-  def parse(s: String): Option[SemVer] =
+object SemVerSpec {
+  def parse(s: String): Option[SemVerSpec] =
     cats.parse.SemVer.semver.parseAll(s).toOption.map { v =>
-      SemVer(v.core.major, v.core.minor, v.core.patch, v.preRelease, v.buildMetadata)
+      SemVerSpec(v.core.major, v.core.minor, v.core.patch, v.preRelease, v.buildMetadata)
     }
 
   sealed abstract class Change(val render: String)
@@ -42,7 +42,7 @@ object SemVer {
     case object BuildMetadata extends Change("build-metadata")
   }
 
-  def getChange(from: SemVer, to: SemVer): Option[Change] =
+  def getChange(from: SemVerSpec, to: SemVerSpec): Option[Change] =
     if (from.major =!= to.major) Some(Major)
     else if (from.minor =!= to.minor) Some(Minor)
     else if (from.preRelease =!= to.preRelease) Some(PreRelease)

@@ -60,7 +60,8 @@ object NewPullRequestData {
       oldVersionDetails.toList ++
       List(ignoreFutureUpdates(update))
     val labels = List(updateType(update)) ++
-      semVerLabel(update).toList ++
+      earlySemVerLabel(update).toList ++
+      semVerSpecLabel(update).toList ++
       migrationLabel.toList ++
       oldVersionLabel.toList
 
@@ -185,12 +186,19 @@ object NewPullRequestData {
       )
     }
 
-  def semVerLabel(update: Update): Option[String] =
+  def earlySemVerLabel(update: Update): Option[String] =
     for {
-      curr <- SemVer.parse(update.currentVersion)
-      next <- SemVer.parse(update.nextVersion)
-      change <- SemVer.getChange(curr, next)
-    } yield s"semver-${change.render}"
+      curr <- EarlySemVer.parse(update.currentVersion)
+      next <- EarlySemVer.parse(update.nextVersion)
+      change <- EarlySemVer.getChange(curr, next)
+    } yield s"early-semver-${change.render}"
+
+  def semVerSpecLabel(update: Update): Option[String] =
+    for {
+      curr <- SemVerSpec.parse(update.currentVersion)
+      next <- SemVerSpec.parse(update.nextVersion)
+      change <- SemVerSpec.getChange(curr, next)
+    } yield s"semver-spec-${change.render}"
 
   def from(
       data: UpdateData,
