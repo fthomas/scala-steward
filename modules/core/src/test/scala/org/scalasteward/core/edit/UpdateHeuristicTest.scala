@@ -682,6 +682,56 @@ class UpdateHeuristicTest extends FunSuite {
     val update = Single("org.typelevel" % "cats-core" % "2.4.1", Nel.of("2.4.2"))
     assertEquals(update.replaceVersionIn(original), Some(expected) -> UpdateHeuristic.original.name)
   }
+
+  test("pom.xml single update".ignore) {
+    val original =
+      """  <dependency>
+        |    <groupId>commons-io</groupId>
+        |    <artifactId>commons-io</artifactId>
+        |    <version>2.6</version>
+        |  </dependency>
+        |""".stripMargin
+    val expected =
+      """  <dependency>
+        |    <groupId>commons-io</groupId>
+        |    <artifactId>commons-io</artifactId>
+        |    <version>2.8.0</version>
+        |  </dependency>
+        |""".stripMargin
+    assertEquals(
+      Single("commons-io" % "commons-io" % "2.6", Nel.of("2.8.0"))
+        .replaceVersionIn(original),
+      Some(expected) -> UpdateHeuristic.original.name
+    )
+  }
+
+  test("pom.xml single update property version") {
+    val original =
+      s"""  <properties>
+         |    <commons-io.version>2.6</commons-io.version>
+         |  </properties>
+         |  <dependency>
+         |    <groupId>commons-io</groupId>
+         |    <artifactId>commons-io</artifactId>
+         |    <version>$${commons-io.version}</version>
+         |  </dependency>
+         |""".stripMargin
+    val expected =
+      s"""  <properties>
+         |    <commons-io.version>2.8.0</commons-io.version>
+         |  </properties>
+         |  <dependency>
+         |    <groupId>commons-io</groupId>
+         |    <artifactId>commons-io</artifactId>
+         |    <version>$${commons-io.version}</version>
+         |  </dependency>
+         |""".stripMargin
+    assertEquals(
+      Single("commons-io" % "commons-io" % "2.6", Nel.of("2.8.0"))
+        .replaceVersionIn(original),
+      Some(expected) -> UpdateHeuristic.original.name
+    )
+  }
 }
 
 object UpdateHeuristicTest {
