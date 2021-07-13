@@ -17,10 +17,11 @@ val moduleCrossPlatformMatrix: Map[String, List[Platform]] = Map(
 
 val Scala212 = "2.12.10"
 val Scala213 = "2.13.5"
+val Scala3 = "3.0.0-RC3"
 
 /// sbt-github-actions configuration
 
-ThisBuild / crossScalaVersions := Seq(Scala212, Scala213)
+ThisBuild / crossScalaVersions := Seq(Scala212, Scala213, Scala3)
 ThisBuild / githubWorkflowTargetTags ++= Seq("v*")
 ThisBuild / githubWorkflowPublishTargetBranches := Seq(
   RefPredicate.Equals(Ref.Branch("master")),
@@ -73,46 +74,48 @@ lazy val core = myCrossProject("core")
   .enablePlugins(BuildInfoPlugin, JavaAppPackaging, DockerPlugin)
   .settings(dockerSettings)
   .settings(
+    crossScalaVersions := Seq(Scala213, Scala3),
     libraryDependencies ++= Seq(
-      Dependencies.attoCore,
+      Dependencies.attoCore.cross(CrossVersion.for3Use2_13),
       Dependencies.bcprovJdk15to18,
-      Dependencies.betterFiles,
-      Dependencies.caseApp,
-      Dependencies.catsCore,
-      Dependencies.catsEffect,
-      Dependencies.catsParse,
-      Dependencies.circeConfig,
-      Dependencies.circeGeneric,
-      Dependencies.circeGenericExtras,
-      Dependencies.circeParser,
-      Dependencies.circeRefined,
+      Dependencies.betterFiles.cross(CrossVersion.for3Use2_13),
+      Dependencies.caseApp.cross(CrossVersion.for3Use2_13),
+      Dependencies.catsCore.cross(CrossVersion.for3Use2_13),
+      Dependencies.catsEffect.cross(CrossVersion.for3Use2_13),
+      Dependencies.catsParse.cross(CrossVersion.for3Use2_13),
+      Dependencies.circeConfig.cross(CrossVersion.for3Use2_13),
+      Dependencies.circeGeneric.cross(CrossVersion.for3Use2_13),
+      Dependencies.circeGenericExtras.cross(CrossVersion.for3Use2_13),
+      Dependencies.circeParser.cross(CrossVersion.for3Use2_13),
+      Dependencies.circeRefined.cross(CrossVersion.for3Use2_13),
       Dependencies.commonsIo,
-      Dependencies.coursierCore,
-      Dependencies.cron4sCore,
-      Dependencies.fs2Core,
-      Dependencies.fs2Io,
-      Dependencies.http4sCirce,
-      Dependencies.http4sClient,
-      Dependencies.http4sCore,
-      Dependencies.http4sOkhttpClient,
+      Dependencies.coursierCore.cross(CrossVersion.for3Use2_13),
+      Dependencies.cron4sCore.cross(CrossVersion.for3Use2_13),
+      Dependencies.fs2Core.cross(CrossVersion.for3Use2_13),
+      Dependencies.fs2Io.cross(CrossVersion.for3Use2_13),
+      Dependencies.http4sCirce.cross(CrossVersion.for3Use2_13),
+      Dependencies.http4sClient.cross(CrossVersion.for3Use2_13),
+      Dependencies.http4sCore.cross(CrossVersion.for3Use2_13),
+      Dependencies.http4sOkhttpClient.cross(CrossVersion.for3Use2_13),
       Dependencies.jjwtApi,
       Dependencies.jjwtImpl % Runtime,
       Dependencies.jjwtJackson % Runtime,
-      Dependencies.log4catsSlf4j,
-      Dependencies.monocleCore,
-      Dependencies.refined,
-      Dependencies.scalacacheCaffeine,
+      Dependencies.log4catsSlf4j.cross(CrossVersion.for3Use2_13),
+      Dependencies.monocleCore.cross(CrossVersion.for3Use2_13),
+      Dependencies.refined.cross(CrossVersion.for3Use2_13),
+      Dependencies.scalacacheCaffeine.cross(CrossVersion.for3Use2_13),
       Dependencies.logbackClassic % Runtime,
-      Dependencies.catsLaws % Test,
-      Dependencies.circeLiteral % Test,
-      Dependencies.disciplineMunit % Test,
-      Dependencies.http4sDsl % Test,
-      Dependencies.munit % Test,
-      Dependencies.munitCatsEffect % Test,
-      Dependencies.munitScalacheck % Test,
-      Dependencies.refinedScalacheck % Test,
-      Dependencies.scalacheck % Test
+      Dependencies.catsLaws.cross(CrossVersion.for3Use2_13) % Test,
+      Dependencies.circeLiteral.cross(CrossVersion.for3Use2_13) % Test,
+      Dependencies.disciplineMunit.cross(CrossVersion.for3Use2_13) % Test,
+      Dependencies.http4sDsl.cross(CrossVersion.for3Use2_13) % Test,
+      Dependencies.munit.cross(CrossVersion.for3Use2_13) % Test,
+      Dependencies.munitCatsEffect.cross(CrossVersion.for3Use2_13) % Test,
+      Dependencies.munitScalacheck.cross(CrossVersion.for3Use2_13) % Test,
+      Dependencies.refinedScalacheck.cross(CrossVersion.for3Use2_13) % Test,
+      Dependencies.scalacheck.cross(CrossVersion.for3Use2_13) % Test
     ),
+    evictionErrorLevel := Level.Info,
     assembly / test := {},
     assembly / assemblyMergeStrategy := {
       val nativeSuffix = "\\.(?:dll|jnilib|so)$".r
