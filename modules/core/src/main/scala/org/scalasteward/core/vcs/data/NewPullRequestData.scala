@@ -64,19 +64,22 @@ object NewPullRequestData {
       migrationLabel.toList ++
       oldVersionLabel.toList
 
-    s"""|Updates $artifacts ${fromTo(update)}.
-        |${releaseNote(releaseRelatedUrls).getOrElse("")}
+    s"""|Update $artifacts ${fromTo(update)}.
+        |* ${releaseNote(releaseRelatedUrls).getOrElse("")}
         |
-        |I'll automatically update this PR to resolve conflicts as long as you don't change it yourself.
-        |
-        |If you'd like to skip this version, you can just close this PR. If you have any feedback, just mention me in the comments below.
-        |
-        |Configure Scala Steward for your repository with a [`${RepoConfigAlg.repoConfigBasename}`](https://github.com/scala-steward-org/scala-steward/blob/${org.scalasteward.core.BuildInfo.gitHeadCommit}/docs/repo-specific-configuration.md) file.
+        |> I'll automatically update this PR to resolve conflicts as long as you don't change it yourself.
+        |> To skip this version update, just close this PR. If you have any feedback,
+        |> just mention me in the comments below.
+        |> Configure Scala Steward for your repository with a
+        |> [`${RepoConfigAlg.repoConfigBasename}`](https://github.com/scala-steward-org/scala-steward/blob/${org.scalasteward.core.BuildInfo.gitHeadCommit}/docs/repo-specific-configuration.md) file.
         |
         |Have a fantastic day writing Scala!
         |
+        |---
+        |
         |${details.map(_.toHtml).mkString("\n")}
         |
+        |~~~
         |${labels.mkString("labels: ", ", ", "")}
         |""".stripMargin.trim
   }
@@ -111,7 +114,7 @@ object NewPullRequestData {
         .some
 
   def fromTo(update: Update): String =
-    s"from ${update.currentVersion} to ${update.nextVersion}"
+    s"from `${update.currentVersion}` to `${update.nextVersion}`"
 
   def artifactsWithOptionalUrl(update: Update, artifactIdToUrl: Map[String, Uri]): String =
     update match {
@@ -155,8 +158,8 @@ object NewPullRequestData {
 
   def ignoreFutureUpdates(update: Update): Details =
     Details(
-      "Ignore future updates",
-      s"""|Add this to your `${RepoConfigAlg.repoConfigBasename}` file to ignore future updates of this dependency:
+      "Suppress future updates",
+      s"""|Add this to your `${RepoConfigAlg.repoConfigBasename}` file to suppress future updates of this dependency:
           |```
           |${RepoConfigAlg.configToIgnoreFurtherUpdates(update)}
           |```
@@ -178,7 +181,7 @@ object NewPullRequestData {
         Some("scalafix-migrations"),
         Some(
           Details(
-            "Applied Migrations",
+            "Migrations applied",
             s"$ruleList$docSection"
           )
         )

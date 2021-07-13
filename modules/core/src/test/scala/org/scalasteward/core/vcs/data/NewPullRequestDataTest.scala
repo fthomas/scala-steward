@@ -29,7 +29,7 @@ class NewPullRequestDataTest extends FunSuite {
     val expected =
       raw"""|{
             |  "title" : "Update logback-classic to 1.2.3",
-            |  "body" : "Updates ch.qos.logback:logback-classic from 1.2.0 to 1.2.3.\n\n\nI'll automatically update this PR to resolve conflicts as long as you don't change it yourself.\n\nIf you'd like to skip this version, you can just close this PR. If you have any feedback, just mention me in the comments below.\n\nConfigure Scala Steward for your repository with a [`.scala-steward.conf`](https://github.com/scala-steward-org/scala-steward/blob/${org.scalasteward.core.BuildInfo.gitHeadCommit}/docs/repo-specific-configuration.md) file.\n\nHave a fantastic day writing Scala!\n\n<details>\n<summary>Ignore future updates</summary>\n\nAdd this to your `.scala-steward.conf` file to ignore future updates of this dependency:\n```\nupdates.ignore = [ { groupId = \"ch.qos.logback\", artifactId = \"logback-classic\" } ]\n```\n</details>\n\nlabels: library-update, semver-patch",
+            |  "body" : "Update ch.qos.logback:logback-classic from `1.2.0` to `1.2.3`.\n* \n\n> I'll automatically update this PR to resolve conflicts as long as you don't change it yourself.\n> To skip this version update, just close this PR. If you have any feedback,\n> just mention me in the comments below.\n> Configure Scala Steward for your repository with a\n> [`.scala-steward.conf`](https://github.com/scala-steward-org/scala-steward/blob/fcb3205568718165f2edd88599e603ee21886132/docs/repo-specific-configuration.md) file.\n\nHave a fantastic day writing Scala!\n\n---\n\n<details>\n<summary>Suppress future updates</summary>\n\nAdd this to your `.scala-steward.conf` file to suppress future updates of this dependency:\n```\nupdates.ignore = [ { groupId = \"ch.qos.logback\", artifactId = \"logback-classic\" } ]\n```\n</details>\n\n~~~\nlabels: library-update, semver-patch",
             |  "head" : "scala-steward:update/logback-classic-1.2.3",
             |  "base" : "master",
             |  "draft" : false
@@ -42,7 +42,7 @@ class NewPullRequestDataTest extends FunSuite {
       NewPullRequestData.fromTo(
         Update.Single("com.example" % "foo" % "1.2.0", Nel.of("1.2.3"))
       ),
-      "from 1.2.0 to 1.2.3"
+      "from `1.2.0` to `1.2.3`"
     )
   }
 
@@ -120,7 +120,7 @@ class NewPullRequestDataTest extends FunSuite {
     assertEquals(
       appliedMigrations.fold("")(_.toHtml),
       """<details>
-        |<summary>Applied Migrations</summary>
+        |<summary>Migrations applied</summary>
         |
         |* I am a rewrite rule
         |</details>
@@ -144,7 +144,7 @@ class NewPullRequestDataTest extends FunSuite {
     assertEquals(
       appliedMigrations.fold("")(_.toHtml),
       """<details>
-        |<summary>Applied Migrations</summary>
+        |<summary>Migrations applied</summary>
         |
         |* I am a rewrite rule
         |
