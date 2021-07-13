@@ -34,7 +34,8 @@ class MillAlgTest extends FunSuite {
       trace = Vector(
         Cmd("write", predef),
         Cmd(repoDir.toString :: millCmd),
-        Cmd("rm", "-rf", predef)
+        Cmd("rm", "-rf", predef),
+        Cmd("read", s"$repoDir/.mill-version")
       )
     )
     assertEquals(state, expected)

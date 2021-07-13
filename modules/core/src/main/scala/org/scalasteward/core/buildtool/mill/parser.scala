@@ -40,6 +40,9 @@ object parser {
           .leftMap(CirceParseError("Failed to decode Modules", _): ParseError)
     } yield json.modules
 
+  def parseMillVersion(s: String): Option[String] =
+    Option(s.trim()).filter(_.nonEmpty)
+
 }
 
 case class Modules(modules: List[MillModule])
