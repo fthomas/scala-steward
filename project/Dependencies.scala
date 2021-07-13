@@ -39,7 +39,7 @@ object Dependencies {
   val munit = "org.scalameta" %% "munit" % "0.7.27"
   val munitCatsEffect = "org.typelevel" %% "munit-cats-effect-3" % "1.0.5"
   val munitScalacheck = "org.scalameta" %% "munit-scalacheck" % munit.revision
-  val refined = "eu.timepit" %% "refined" % "0.9.24"
+  val refined = "eu.timepit" %% "refined" % "0.9.26"
   val refinedScalacheck = "eu.timepit" %% "refined-scalacheck" % refined.revision
   val scalacacheCaffeine = "com.github.cb372" %% "scalacache-caffeine" % "1.0.0-M2"
   val scalacheck = "org.scalacheck" %% "scalacheck" % "1.15.4"
